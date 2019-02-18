@@ -4,8 +4,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(
 	llv_srcs
-	fix.cpp
 	line_length_validator.h
+	line_length_validator.cpp
 	validator_settings.h
 
 )
