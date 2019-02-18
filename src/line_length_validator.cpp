@@ -52,6 +52,14 @@ namespace llv
 		std::copy(found_files_paths.begin(), found_files_paths.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
 
 		std::cout << "\n\n";
+
+		std::string tab_replacement{};
+		// redo :D 
+		for(unsigned i = 0; i < validator_settings().count_tab_as_amount_of_characters; ++i)
+		{
+			tab_replacement += ' ';
+		}
+
 		for(const auto& file_path : found_files_paths)
 		{
 			std::cout << "Validating file - " << file_path << '\n';
@@ -66,7 +74,12 @@ namespace llv
 
 			for (std::string line; std::getline(file_stream, line);)
 			{
-				// todo tabulators, absolute path option	  
+				size_t tab_pos{};
+				while((tab_pos = line.find('\t')) != std::string::npos)
+				{
+					line.replace(tab_pos, 1, tab_replacement);
+				}
+
 				if(line.length() > validator_settings().max_line_length)
 				{
 					fvo.add_output({ line, validator_output::e_output_type::error });
