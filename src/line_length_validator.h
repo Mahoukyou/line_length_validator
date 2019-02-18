@@ -17,8 +17,15 @@ namespace llv
 		line_length_validator& operator=(const line_length_validator&) = delete;
 		line_length_validator& operator=(line_length_validator&&) noexcept = delete;
 
-		const std::string& root_directory() const noexcept { return root_directory_; }
-		const validator_settings& validator_settings() const noexcept { return validator_settings_; }
+		const std::string& root_directory() const noexcept
+		{
+			return root_directory_;
+		}
+
+		const validator_settings& validator_settings() const noexcept
+		{
+			return validator_settings_;
+		}
 
 	private:
 		llv::validator_settings validator_settings_;
