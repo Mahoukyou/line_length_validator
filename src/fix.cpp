@@ -1,0 +1,1 @@
+// Temp fix, dunno why but the project does not compile to *.lib if nary source file is present

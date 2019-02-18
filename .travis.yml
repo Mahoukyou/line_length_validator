@@ -1,0 +1,20 @@
+language: cpp
+compiler: g++
+dist: trusty 
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-7
+      - g++-7
+script:
+  - export CC=gcc-7
+  - export CXX=g++-7
+  - cmake . -DENABLE_COVERAGE=TRUE
+  - make VERBOSE=1
+  - make test
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
