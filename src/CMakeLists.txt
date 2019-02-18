@@ -5,7 +5,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(
 	llv_srcs
 	fix.cpp
-	test.h
+	line_length_validator.h
+	validator_settings.h
+
 )
 add_library(line_length_validater_lib STATIC ${llv_srcs})
 set_target_properties(line_length_validater_lib PROPERTIES LINKER_LANGUAGE CXX)

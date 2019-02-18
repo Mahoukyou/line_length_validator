@@ -1,6 +1,5 @@
-#include "test.h"
+#include "line_length_validator.h"
 
 int main()
 {
-	return test(1, 2);
 }
