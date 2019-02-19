@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.2)
 
-project (line_length_validater)
+project (line_length_validator)
 
 #Coverage
 if(CMAKE_COMPILER_IS_GNUCC)
