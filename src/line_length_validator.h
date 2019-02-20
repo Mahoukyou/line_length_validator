@@ -28,11 +28,22 @@ namespace llv
 			return validator_settings_;
 		}
 
+		const std::vector<llv::validator_file_overview>& files_overview() const noexcept
+		{
+			return files_overview_;
+		}
+
+		void update_files_overview();
+
 		// todo for now
 		void validate();
 
 	private:
+		std::vector<std::string> files_to_validate() const;
+		e_error_type validate_line(const std::string& line) const;
+
 		std::vector<llv::file_validator_output> outputs_;
+		std::vector<llv::validator_file_overview> files_overview_;
 		llv::validator_settings validator_settings_;
 		std::string root_directory_;
 	};
