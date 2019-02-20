@@ -2,15 +2,30 @@
 
 #include <string>
 #include <vector>
+#include <array>
 
 namespace llv
 {
+	enum class e_error_type 
+	{ 
+		warning, 
+		error,
+		none
+	};
+
 	struct validator_output
 	{
-		enum class e_output_type { warning, error };
-
 		std::string line;
-		e_output_type output_type;
+		e_error_type error_type;
+	};
+
+	struct validator_file_overview
+	{
+		std::string file_name;
+		std::array<size_t, 2> error_count{};
+
+		size_t line_count{};
+		bool is_valid{ true }; // todo rename more appropriately
 	};
 
 	class file_validator_output

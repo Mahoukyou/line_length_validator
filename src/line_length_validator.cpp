@@ -16,49 +16,52 @@ namespace llv
 
 	}
 
-	void line_length_validator::validate()
+	void line_length_validator::update_files_overview()
 	{
-		// sample PoC
-		// todo, refactor
-		auto has_extension = [this](const std::string& str) -> bool
-		{
-			for (const std::string& extension : validator_settings().file_extensions_to_validate)
-			{
-				if (str.length() < extension.length())
-				{
-					continue;
-				}
+		// todo cache?
+		// redo later, for now quick poc, update all every time
+		const auto files_paths = files_to_validate();
 
-				if (str.find(extension, str.size() - extension.size()) != std::string::npos)
+		// todo, just work on the original one?, leave it for now in case we will want strong exception guarantee
+		std::vector<validator_file_overview> new_files_overview;
+		new_files_overview.reserve(files_paths.size());
+
+		for (const auto& file_path : files_paths)
+		{
+			validator_file_overview vfo;
+			vfo.file_name = file_path; // todo get name later, not important atm
+
+			std::ifstream file_stream{ file_path };
+			if (!file_stream.good())
+			{
+				vfo.is_valid = false;
+			}
+			else
+			{
+				for (std::string line; std::getline(file_stream, line);)
 				{
-					return true;
+					++vfo.line_count;
+					if (const auto error = validate_line(line); error != e_error_type::none)
+					{
+						++vfo.error_count[static_cast<int>(error)];
+					}
 				}
 			}
 
-			return false;
-		};
-
-		std::vector<std::string> found_files_paths;
-		for (auto& file_path : std::filesystem::recursive_directory_iterator(root_directory_))
-		{
-			if (file_path.is_regular_file() && has_extension(file_path.path().string()))
-			{
-				found_files_paths.push_back(file_path.path().string());
-			}
+			new_files_overview.push_back(std::move(vfo));
 		}
 
+		files_overview_ = std::move(new_files_overview);
+	}
+
+	void line_length_validator::validate()
+	{
+		const auto found_files_paths = files_to_validate();
 
 		std::cout << "Found " << found_files_paths.size() << " files: \n";
 		std::copy(found_files_paths.begin(), found_files_paths.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
 
 		std::cout << "\n\n";
-
-		std::string tab_replacement{};
-		// redo :D 
-		for(unsigned i = 0; i < validator_settings().count_tab_as_amount_of_characters; ++i)
-		{
-			tab_replacement += ' ';
-		}
 
 		for(const auto& file_path : found_files_paths)
 		{
@@ -74,19 +77,9 @@ namespace llv
 
 			for (std::string line; std::getline(file_stream, line);)
 			{
-				size_t tab_pos{};
-				while((tab_pos = line.find('\t')) != std::string::npos)
+				if(const auto error = validate_line(line); error != e_error_type::none)
 				{
-					line.replace(tab_pos, 1, tab_replacement);
-				}
-
-				if(line.length() > validator_settings().max_line_length)
-				{
-					fvo.add_output({ line, validator_output::e_output_type::error });
-				}
-				else if(line.length() > validator_settings().warning_line_length)
-				{
-					fvo.add_output({ line, validator_output::e_output_type::warning });
+					fvo.add_output({ line, error });
 				}
 			}
 
@@ -102,11 +95,67 @@ namespace llv
 			std::cout << "File: " << el.file_path() << '\n';
 			for(const auto& err : el.outputs())
 			{
-				std::cout << (err.output_type == validator_output::e_output_type::warning ? "Warning " : "Error ");
+				std::cout << (err.error_type == e_error_type::warning ? "Warning " : "Error ");
 				std::cout << "line length: " << err.line.length() << " --- " << err.line << '\n';
 			}
 
 			std::cout << "\n\n";
 		}
+	}
+
+	std::vector<std::string> line_length_validator::files_to_validate() const
+	{
+		const auto has_extension = [this](const std::string& str) -> bool
+		{
+			for (const auto& extension : validator_settings().file_extensions_to_validate)
+			{
+				if (str.length() < extension.length())
+				{
+					continue;
+				}
+
+				if (str.find(extension, str.size() - extension.size()) != std::string::npos)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		// todo, maybe use directory_entry instead of to get files/store them?
+		// refactor later in case we need to check if our data is dirty instead of revalidating everything
+		std::vector<std::string> found_files_paths;
+		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(root_directory()))
+		{
+			if (directory_entry.is_regular_file() && has_extension(directory_entry.path().string()))
+			{
+				found_files_paths.push_back(directory_entry.path().string());
+			}
+		}
+
+		return found_files_paths;
+	}
+
+	e_error_type line_length_validator::validate_line(const std::string& line) const
+	{
+		size_t line_length = line.size();
+		if (validator_settings().count_tab_as_amount_of_characters == 1)
+		{
+			const auto tab_count = std::count(line.begin(), line.end(), '\t');
+			line_length += tab_count * validator_settings().count_tab_as_amount_of_characters - tab_count;
+		}
+
+		if (line_length > validator_settings().max_line_length)
+		{
+			return e_error_type::error;
+		}
+
+		if (line_length > validator_settings().warning_line_length)
+		{
+			return e_error_type::warning;
+		}
+
+		return e_error_type::none;
 	}
 }
