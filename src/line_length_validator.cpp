@@ -1,11 +1,7 @@
 #include "line_length_validator.h"
 #include <filesystem>
 
-// todo remove later when refactoring
-#include <iostream>
-#include <iterator>
 #include <string>
-#include <fstream>
 
 namespace llv
 {
@@ -16,90 +12,43 @@ namespace llv
 
 	}
 
-	void line_length_validator::update_files_overview()
+
+	void line_length_validator::validate(const bool update_directory_files)
 	{
-		// todo cache?
-		// redo later, for now quick poc, update all every time
-		const auto files_paths = files_to_validate();
-
-		// todo, just work on the original one?, leave it for now in case we will want strong exception guarantee
-		std::vector<validator_file_overview> new_files_overview;
-		new_files_overview.reserve(files_paths.size());
-
-		for (const auto& file_path : files_paths)
+		// todo to some check for dirty cache and update only when needed without the variable
+		// same thing for overview update
+		if (update_directory_files)
 		{
-			validator_file_overview vfo;
-			vfo.file_name = file_path; // todo get name later, not important atm
-
-			std::ifstream file_stream{ file_path };
-			if (!file_stream.good())
-			{
-				vfo.is_valid = false;
-			}
-			else
-			{
-				for (std::string line; std::getline(file_stream, line);)
-				{
-					++vfo.line_count;
-					if (const auto error = validate_line(line); error != e_error_type::none)
-					{
-						++vfo.error_count[static_cast<int>(error)];
-					}
-				}
-			}
-
-			new_files_overview.push_back(std::move(vfo));
+			update_files_in_directory();
 		}
 
-		files_overview_ = std::move(new_files_overview);
+		for (auto& file_validator : file_validators_)
+		{
+			file_validator.validate(validator_settings());
+		}
 	}
 
-	void line_length_validator::validate()
+	void line_length_validator::update_files_in_directory()
 	{
-		const auto found_files_paths = files_to_validate();
+		// todo, or just simply work on the original one?
+		auto files_in_directory = files_to_validate();
 
-		std::cout << "Found " << found_files_paths.size() << " files: \n";
-		std::copy(found_files_paths.begin(), found_files_paths.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
+		std::vector<file_validator> new_file_validators;
+		new_file_validators.reserve(files_in_directory.size());
 
-		std::cout << "\n\n";
-
-		for(const auto& file_path : found_files_paths)
+		for(auto& file_path : files_in_directory)
 		{
-			std::cout << "Validating file - " << file_path << '\n';
-
-			std::ifstream file_stream{ file_path };
-			if(!file_stream.good())
-			{
-				std::cout << "Could not open the file, skipping it\n";
-			}
-
-			file_validator_output fvo{ file_path };
-
-			for (std::string line; std::getline(file_stream, line);)
-			{
-				if(const auto error = validate_line(line); error != e_error_type::none)
-				{
-					fvo.add_output({ line, error });
-				}
-			}
-
-			if(!fvo.outputs().empty())
-			{
-				outputs_.push_back(std::move(fvo));
-			}
+			new_file_validators.emplace_back(std::move(file_path));
 		}
 
-		std::cout << "\n\n Finished validation, found w&e in " << outputs_.size() << " files\n";
-		for(const auto& el : outputs_)
-		{
-			std::cout << "File: " << el.file_path() << '\n';
-			for(const auto& err : el.outputs())
-			{
-				std::cout << (err.error_type == e_error_type::warning ? "Warning " : "Error ");
-				std::cout << "line length: " << err.line.length() << " --- " << err.line << '\n';
-			}
+		file_validators_ = std::move(new_file_validators);
+	}
 
-			std::cout << "\n\n";
+	void line_length_validator::update_files_overview()
+	{
+		for(auto& file_validator : file_validators_)
+		{
+			file_validator.update_overview(validator_settings());
 		}
 	}
 
@@ -135,27 +84,5 @@ namespace llv
 		}
 
 		return found_files_paths;
-	}
-
-	e_error_type line_length_validator::validate_line(const std::string& line) const
-	{
-		size_t line_length = line.size();
-		if (validator_settings().count_tab_as_amount_of_characters == 1)
-		{
-			const auto tab_count = std::count(line.begin(), line.end(), '\t');
-			line_length += tab_count * validator_settings().count_tab_as_amount_of_characters - tab_count;
-		}
-
-		if (line_length > validator_settings().max_line_length)
-		{
-			return e_error_type::error;
-		}
-
-		if (line_length > validator_settings().warning_line_length)
-		{
-			return e_error_type::warning;
-		}
-
-		return e_error_type::none;
 	}
 }

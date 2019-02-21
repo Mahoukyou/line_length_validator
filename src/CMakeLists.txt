@@ -6,8 +6,8 @@ set(
 	llv_srcs
 	line_length_validator.h
 	line_length_validator.cpp
-	validator_output.h
-	validator_output.cpp
+	file_validator.h
+	file_validator.cpp
 	validator_settings.h
 
 )
