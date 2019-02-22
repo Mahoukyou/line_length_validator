@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 #include "validator_settings.h"
 
 namespace llv
@@ -9,15 +10,14 @@ namespace llv
 	enum class e_error_type 
 	{ 
 		warning, 
-		error,
-		none
+		error
 	};
 
 	struct file_line_error
 	{
 		std::string line;
 		size_t line_number{};
-		e_error_type error_type{ e_error_type::none };
+		e_error_type error_type;
 	};
 
 	struct file_overview
@@ -71,7 +71,7 @@ namespace llv
 		}
 
 	private:
-		static e_error_type validate_line(const std::string& line, const llv::validator_settings& settings);
+		static std::optional<e_error_type> validate_line(const std::string& line, const llv::validator_settings& settings);
 
 		std::string file_path_;
 

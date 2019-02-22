@@ -31,12 +31,12 @@ namespace llv
 		for (std::string line; std::getline(file_stream, line); ++line_index)
 		{
 			if (const auto error_type = validate_line(line, settings); 
-				error_type != e_error_type::none)
+				error_type.has_value())
 			{
 				// todo, emplace back
-				new_results.push_back({ std::move(line), line_index, error_type });
+				new_results.push_back({ std::move(line), line_index, error_type.value() });
 
-				switch (error_type)
+				switch (error_type.value())
 				{
 				case e_error_type::warning:
 					++new_overview.warning_count;
@@ -77,9 +77,10 @@ namespace llv
 		for (std::string line; std::getline(file_stream, line);)
 		{
 			++overview_.line_count;
-			if (const auto error_type = validate_line(line, settings); error_type != e_error_type::none)
+			if (const auto error_type = validate_line(line, settings);
+				error_type.has_value())
 			{
-				switch(error_type)
+				switch(error_type.value())
 				{
 				case e_error_type::warning:
 					++overview_.warning_count;
@@ -122,7 +123,7 @@ namespace llv
 		return file_path().substr(file_name_begin_index+1);
 	}
 
-	e_error_type file_validator::validate_line(const std::string& line, const llv::validator_settings& settings)
+	std::optional<e_error_type> file_validator::validate_line(const std::string& line, const llv::validator_settings& settings)
 	{
 		size_t line_length = line.size();
 		if (settings.count_tab_as_amount_of_characters == 1)
@@ -141,6 +142,6 @@ namespace llv
 			return e_error_type::warning;
 		}
 
-		return e_error_type::none;
+		return std::nullopt;
 	}
 }

@@ -63,4 +63,3 @@ int main(int argc, char** argv)
 		print_validation_info(file_validator);
 	}
 }
-	
