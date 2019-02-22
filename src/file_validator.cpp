@@ -30,7 +30,8 @@ namespace llv
 		size_t line_index{ 1 };
 		for (std::string line; std::getline(file_stream, line); ++line_index)
 		{
-			if (const auto error_type = validate_line(line, settings); error_type != e_error_type::none)
+			if (const auto error_type = validate_line(line, settings); 
+				error_type != e_error_type::none)
 			{
 				// todo, emplace back
 				new_results.push_back({ std::move(line), line_index, error_type });
