@@ -1,7 +1,7 @@
 #include "line_length_validator.h"
 #include <filesystem>
-
 #include <string>
+#include <thread>
 
 namespace llv
 {
@@ -22,9 +22,48 @@ namespace llv
 			update_files_in_directory();
 		}
 
-		for (auto& file_validator : file_validators_)
+		// We are not going to data race in here, so no need for expensive locks
+		// (unless of course something else will work on the file_validators_ while we are validating)
+		// But that would happen even without the threading in here (caller screw-up, because this class is not thread-safe)
+
+		// Poor man's threading [begin, end)
+		const auto validate_job = [this](size_t begin, size_t end)
 		{
-			file_validator.validate(validator_settings());
+			for(size_t i = begin; i < end; ++i)
+			{
+				file_validators_[i].validate(validator_settings());
+			}
+		};
+
+		constexpr size_t thread_count{ 4 };
+		if(file_validators().size() >= thread_count)
+		{
+			std::vector<std::thread> threads;
+			threads.reserve(thread_count);
+
+			const size_t job_size = file_validators().size() / thread_count; 
+			for(size_t thread_id = 0; thread_id < thread_count; ++thread_id)
+			{
+				if(thread_id + 1 == thread_count)
+				{
+					threads.emplace_back(validate_job, thread_id * job_size, file_validators().size());
+					break;
+				}
+
+				threads.emplace_back(validate_job, thread_id * job_size, (thread_id + 1) * job_size);
+			}
+
+			for(auto& thread : threads)
+			{
+				thread.join();
+			}
+		}
+		else
+		{
+			for (auto& file_validator : file_validators_)
+			{
+				file_validator.validate(validator_settings());
+			}
 		}
 	}
 
