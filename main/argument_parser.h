@@ -30,18 +30,16 @@ inline const std::array<std::string_view, argument_max> possible_arguments{
 	"-extensions",
 };
 
-struct parsed_arguments
+struct parsed_arguments // todo, rename to something more appropriate
 {
 	std::string file_path;
 	llv::validator_settings settings;
 };
 
-
-e_argument is_an_argument(const char* arg);
-std::optional<int> parse_to_int(const char* arg);
-
 void display_help();
 
-bool has_help_argument(int argc, const char *const *argv);
+e_argument is_an_argument(const char* arg);
+bool has_an_argument(int argc, const char *const *argv, e_argument argument);
 
+std::optional<int> parse_to_int(const char* arg);
 parsed_arguments parse_arguments(int argc, const char *const *argv);

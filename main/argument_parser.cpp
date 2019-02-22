@@ -1,32 +1,5 @@
 #include "argument_parser.h"
 
-e_argument is_an_argument(const char* const arg)
-{
-	for (size_t i = 0; i < possible_arguments.size(); ++i)
-	{
-		if (strcmp(arg, possible_arguments[i].data()) == 0)
-		{
-			return static_cast<e_argument>(i);
-		}
-	}
-
-	return argument_max;
-}
-
-std::optional<int> parse_to_int(const char* const arg)
-{
-	const auto arg_end = strchr(arg, '\0');
-
-	int parsed_value{ 0 };
-	const auto parse_result = std::from_chars(arg, arg_end, parsed_value);
-	if (parse_result.ec != std::errc())
-	{
-		return std::nullopt;
-	}
-
-	return { parsed_value };
-}
-
 void display_help()
 {
 	for (int i = 0; i < argument_max; ++i)
@@ -70,17 +43,44 @@ void display_help()
 	}
 }
 
-bool has_help_argument(const int argc, const char* const* const argv)
+e_argument is_an_argument(const char* const arg)
+{
+	for (size_t i = 0; i < possible_arguments.size(); ++i)
+	{
+		if (strcmp(arg, possible_arguments[i].data()) == 0)
+		{
+			return static_cast<e_argument>(i);
+		}
+	}
+
+	return argument_max;
+}
+
+bool has_an_argument(const int argc, const char* const* const argv, const e_argument argument)
 {
 	for (int i = 1; i < argc; ++i)
 	{
-		if (std::strcmp(argv[i], possible_arguments[argument_help].data()) == 0)
+		if (std::strcmp(argv[i], possible_arguments[argument].data()) == 0)
 		{
 			return true;
 		}
 	}
 
 	return false;
+}
+
+std::optional<int> parse_to_int(const char* const arg)
+{
+	const auto arg_end = strchr(arg, '\0');
+
+	int parsed_value{ 0 };
+	const auto parse_result = std::from_chars(arg, arg_end, parsed_value);
+	if (parse_result.ec != std::errc())
+	{
+		return std::nullopt;
+	}
+
+	return { parsed_value };
 }
 
 parsed_arguments parse_arguments(const int argc, const char* const* const argv)
