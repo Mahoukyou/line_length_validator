@@ -72,8 +72,15 @@ namespace llv
 			return false;
 		};
 
+		// Passing a path to a file instead of a directory does not require extensions
+		// Nor will abide any provided ones
+		if(std::filesystem::is_regular_file(root_directory()))
+		{
+			return { root_directory() };
+		}
+
 		// todo, maybe use directory_entry instead of to get files/store them?
-		// refactor later in case we need to check if our data is dirty instead of revalidating everything
+		// refactor later in case we need to check if our data is dirty instead of re-validating everything
 		std::vector<std::string> found_files_paths;
 		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(root_directory()))
 		{

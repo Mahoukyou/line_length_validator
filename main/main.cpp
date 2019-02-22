@@ -32,7 +32,7 @@ void print_validation_info(const llv::file_validator& file_validator)
 	std::cout << '\n';
 }
 
-int main(int argc, char** argv)
+int main(const int argc, char** argv)
 {
 	if (has_an_argument(argc, argv, argument_help))
 	{
