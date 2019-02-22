@@ -5,9 +5,9 @@
 
 namespace llv
 {
-	line_length_validator::line_length_validator(const llv::validator_settings& settings, const std::string& root_directory) :
-		validator_settings_{ settings },
-		root_directory_{ root_directory }
+	line_length_validator::line_length_validator(llv::validator_settings settings, std::string root_directory) :
+		validator_settings_{ std::move(settings) },
+		root_directory_{ std::move(root_directory) }
 	{
 
 	}

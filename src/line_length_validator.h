@@ -9,7 +9,7 @@ namespace llv
 	class line_length_validator
 	{
 	public:
-		line_length_validator(const validator_settings& settings, const std::string& root_directory);
+		line_length_validator(validator_settings settings, std::string root_directory);
 		~line_length_validator() = default;
 
 		line_length_validator(const line_length_validator&) = delete;
