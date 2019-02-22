@@ -69,11 +69,11 @@ bool has_an_argument(const int argc, const char* const* const argv, const e_argu
 	return false;
 }
 
-std::optional<int> parse_to_int(const char* const arg)
+std::optional<unsigned> parse_to_uint(const char* const arg)
 {
 	const auto arg_end = strchr(arg, '\0');
 
-	int parsed_value{ 0 };
+	unsigned parsed_value{ 0 };
 	const auto parse_result = std::from_chars(arg, arg_end, parsed_value);
 	if (parse_result.ec != std::errc())
 	{
@@ -85,6 +85,7 @@ std::optional<int> parse_to_int(const char* const arg)
 
 parsed_arguments parse_arguments(const int argc, const char* const* const argv)
 {
+	// todo refactor errors
 	parsed_arguments pa{ "", {80, 100, 4, false, {}} };
 	for (int i = 1; i < argc; ++i)
 	{
@@ -102,9 +103,10 @@ parsed_arguments parse_arguments(const int argc, const char* const* const argv)
 				// or just simply take it as the path?
 				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
 				{
-					const auto ar = argv[i + 1];
 					pa.file_path = argv[i + 1];
 					// todo take path until we encounter another argument (because path may contain a space?)
+
+					++i;
 					break;
 				}
 
@@ -114,7 +116,7 @@ parsed_arguments parse_arguments(const int argc, const char* const* const argv)
 			case argument_warning_line_length:
 				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
 				{
-					if (const auto warning_length = parse_to_int(argv[i + 1]);
+					if (const auto warning_length = parse_to_uint(argv[i + 1]);
 						warning_length.has_value())
 					{
 						pa.settings.warning_line_length = warning_length.value();
@@ -123,21 +125,105 @@ parsed_arguments parse_arguments(const int argc, const char* const* const argv)
 					{
 						std::cout << "coulnd parse war\n";
 					}
+
+					++i;
+					break;
 				}
 
 				std::cout << "warl err\n"; // todo
 				break;
 
 			case argument_error_line_length:
+				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+				{
+					if (const auto error_length = parse_to_uint(argv[i + 1]);
+						error_length.has_value())
+					{
+						pa.settings.error_line_length = error_length.value();
+					}
+					else
+					{
+						std::cout << "coulnd parse err\n";
+					}
+
+					++i;
+					break;
+				}
+
+				std::cout << "errl err\n"; // todo
 				break;
 
 			case argument_tab_to_spaces:
+				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+				{
+					if (const auto chars_per_tabulator = parse_to_uint(argv[i + 1]);
+						chars_per_tabulator.has_value())
+					{
+						pa.settings.count_tab_as_amount_of_characters = chars_per_tabulator.value();
+					}
+					else
+					{
+						std::cout << "coulnd parse tabs\n";
+					}
+
+					++i;
+					break;
+				}
+
+				std::cout << "tabs err\n"; // todo
 				break;
 
 			case argument_print_absolute_file_location:
+				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+				{
+					if (const auto result = parse_to_uint(argv[i + 1]);
+						result.has_value())
+					{
+						if (result == 0 || result == 1)
+						{
+							pa.settings.print_file_absolute_location = static_cast<bool>(result);
+						}
+						else
+						{
+							std::cout << "invalid value";
+						}
+					}
+					else
+					{
+						std::cout << "coulnd parse tabs\n";
+					}
+
+					++i;
+					break;
+				}
+
+				std::cout << "tabs err\n"; // todo
 				break;
 
 			case argument_file_extensions:
+				while(i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+				{
+					// todo,  duplicates
+					if ((argv[i + 1])[0] == '.')
+					{
+						pa.settings.file_extensions_to_validate.emplace_back(argv[i + 1]);
+					}
+					else
+					{
+						std::string extenstion{ '.' };
+						extenstion += argv[i + 1];
+
+						pa.settings.file_extensions_to_validate.push_back(std::move(extenstion));
+					}
+
+					++i;
+				}
+
+				if(pa.settings.file_extensions_to_validate.empty())
+				{
+					std::cout << "coulnd't find/parse extenstions\n";
+				}
+
 				break;
 
 			default:
@@ -146,7 +232,7 @@ parsed_arguments parse_arguments(const int argc, const char* const* const argv)
 		}
 		else
 		{
-
+			std::cout << "argument - [" << argv[i] << "] not recognized\n";
 		}
 	}
 

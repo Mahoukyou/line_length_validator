@@ -41,5 +41,5 @@ void display_help();
 e_argument is_an_argument(const char* arg);
 bool has_an_argument(int argc, const char *const *argv, e_argument argument);
 
-std::optional<int> parse_to_int(const char* arg);
+std::optional<unsigned> parse_to_uint(const char* arg);
 parsed_arguments parse_arguments(int argc, const char *const *argv);

@@ -8,7 +8,7 @@ namespace llv
 	struct validator_settings
 	{
 		unsigned warning_line_length{};
-		unsigned max_line_length{};
+		unsigned error_line_length{};
 
 		unsigned count_tab_as_amount_of_characters{};
 

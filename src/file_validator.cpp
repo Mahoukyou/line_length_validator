@@ -131,7 +131,7 @@ namespace llv
 			line_length += tab_count * settings.count_tab_as_amount_of_characters - tab_count;
 		}
 
-		if (line_length > settings.max_line_length)
+		if (line_length > settings.error_line_length)
 		{
 			return e_error_type::error;
 		}
