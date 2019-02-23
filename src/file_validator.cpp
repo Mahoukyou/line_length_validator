@@ -4,7 +4,7 @@
 
 namespace llv
 {
-	file_validator::file_validator(std::string file_path) :
+	file_validator::file_validator(std::filesystem::path file_path) :
 		file_path_{ std::move(file_path) },
 		is_validated_{ false },
 		is_overview_updated_{ false }
@@ -12,7 +12,6 @@ namespace llv
 	{
 
 	}
-
 	bool file_validator::validate(const validator_settings& settings)
 	{
 		std::ifstream file_stream{ file_path_ };
@@ -27,6 +26,7 @@ namespace llv
 		std::vector<file_line_error> new_results;
 		new_results.reserve(results().size());
 
+		// todo, wstring?
 		size_t line_index{ 1 };
 		for (std::string line; std::getline(file_stream, line); ++line_index)
 		{
@@ -74,13 +74,14 @@ namespace llv
 			return false;
 		}
 
+		// todo, wstring?
 		for (std::string line; std::getline(file_stream, line);)
 		{
 			++overview_.line_count;
 			if (const auto error_type = validate_line(line, settings);
 				error_type.has_value())
 			{
-				switch(error_type.value())
+				switch (error_type.value())
 				{
 				case e_error_type::warning:
 					++overview_.warning_count;
@@ -101,17 +102,19 @@ namespace llv
 		return true;
 	}
 
-	std::string file_validator::file_name() const
+	std::wstring file_validator::file_name() const
 	{
-		const auto last_slash_index1 = file_path().find_last_of('\\');
-		const auto last_slash_index2 = file_path().find_last_of('/');
+		auto file_name = file_path().wstring();
+
+		const auto last_slash_index1 = file_name.find_last_of('\\');
+		const auto last_slash_index2 = file_name.find_last_of('/');
 
 		size_t file_name_begin_index{};
-		if(last_slash_index1 == std::string::npos)
+		if (last_slash_index1 == std::string::npos)
 		{
 			file_name_begin_index = last_slash_index2;
 		}
-		else if(last_slash_index2 == std::string::npos)
+		else if (last_slash_index2 == std::string::npos)
 		{
 			file_name_begin_index = last_slash_index1;
 		}
@@ -120,7 +123,7 @@ namespace llv
 			file_name_begin_index = std::max(last_slash_index1, last_slash_index2);
 		}
 
-		return file_path().substr(file_name_begin_index+1);
+		return file_name.substr(file_name_begin_index + 1);
 	}
 
 	std::optional<e_error_type> file_validator::validate_line(const std::string& line, const llv::validator_settings& settings)

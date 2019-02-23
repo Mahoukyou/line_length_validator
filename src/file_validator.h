@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <filesystem>
 #include "validator_settings.h"
 
 namespace llv
@@ -15,7 +16,7 @@ namespace llv
 
 	struct file_line_error
 	{
-		std::string line;
+		std::string line; // todo, consider wstring
 		size_t line_number{};
 		e_error_type error_type;
 	};
@@ -30,7 +31,7 @@ namespace llv
 	class file_validator
 	{
 	public:
-		explicit file_validator(std::string file_path);
+		explicit file_validator(std::filesystem::path file_path);
 
 		~file_validator() = default;
 
@@ -53,12 +54,12 @@ namespace llv
 			return is_overview_updated_;
 		}
 
-		const std::string& file_path() const noexcept
+		const std::filesystem::path& file_path() const noexcept
 		{
 			return file_path_;
 		}
 
-		std::string file_name() const;
+		std::wstring file_name() const;
 
 		const auto& results() const noexcept
 		{
@@ -73,7 +74,7 @@ namespace llv
 	private:
 		static std::optional<e_error_type> validate_line(const std::string& line, const llv::validator_settings& settings);
 
-		std::string file_path_;
+		std::filesystem::path file_path_;
 
 		std::vector<file_line_error> results_;
 		file_overview overview_;

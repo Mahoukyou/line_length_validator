@@ -5,7 +5,8 @@
 
 void print_validation_info(const llv::file_validator& file_validator)
 {
-	std::cout << "File: " << file_validator.file_name() << cgreen << "\nLines: " << file_validator.overview().line_count << cdefault;
+	std::wcout << "File: " << file_validator.file_name();
+	std::cout << cgreen << "\nLines: " << file_validator.overview().line_count << cdefault;
 	std::cout << cyellow << "\t Warnings: " << file_validator.overview().warning_count << cdefault;
 	std::cout << cred << "\t Errors: " << file_validator.overview().error_count << cdefault << "\n";
 

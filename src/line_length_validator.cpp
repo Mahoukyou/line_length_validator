@@ -5,9 +5,9 @@
 
 namespace llv
 {
-	line_length_validator::line_length_validator(llv::validator_settings settings, std::string root_directory) :
+	line_length_validator::line_length_validator(llv::validator_settings settings, std::filesystem::path path) :
 		validator_settings_{ std::move(settings) },
-		root_directory_{ std::move(root_directory) }
+		path_{ std::move(path) }
 	{
 
 	}
@@ -52,9 +52,9 @@ namespace llv
 		}
 	}
 
-	std::vector<std::string> line_length_validator::files_to_validate() const
+	std::vector<std::filesystem::path> line_length_validator::files_to_validate() const
 	{
-		const auto has_extension = [this](const std::string& str) -> bool
+		const auto has_extension = [this](const std::wstring& str) -> bool
 		{
 			for (const auto& extension : validator_settings().file_extensions_to_validate)
 			{
@@ -63,7 +63,11 @@ namespace llv
 					continue;
 				}
 
-				if (str.find(extension, str.size() - extension.size()) != std::string::npos)
+				//todo, for now, refactor extensions later
+				std::wstring tmp_ext_wstring{};
+				tmp_ext_wstring.assign(extension.begin(), extension.end());
+
+				if (str.find(tmp_ext_wstring, str.size() - tmp_ext_wstring.size()) != std::string::npos)
 				{
 					return true;
 				}
@@ -74,19 +78,19 @@ namespace llv
 
 		// Passing a path to a file instead of a directory does not require extensions
 		// Nor will abide any provided ones
-		if(std::filesystem::is_regular_file(root_directory()))
+		if(std::filesystem::is_regular_file(path()))
 		{
-			return { root_directory() };
+			return { path() };
 		}
 
 		// todo, maybe use directory_entry instead of to get files/store them?
 		// refactor later in case we need to check if our data is dirty instead of re-validating everything
-		std::vector<std::string> found_files_paths;
-		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(root_directory()))
+		std::vector<std::filesystem::path> found_files_paths;
+		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(path()))
 		{
-			if (directory_entry.is_regular_file() && has_extension(directory_entry.path().string()))
+			if (directory_entry.is_regular_file() && has_extension(directory_entry.path().wstring()))
 			{
-				found_files_paths.push_back(directory_entry.path().string());
+				found_files_paths.push_back(directory_entry.path());
 			}
 		}
 
