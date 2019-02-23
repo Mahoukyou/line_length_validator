@@ -36,7 +36,7 @@ namespace llv
 		std::vector<file_validator> new_file_validators;
 		new_file_validators.reserve(files_in_directory.size());
 
-		for(auto& file_path : files_in_directory)
+		for (auto& file_path : files_in_directory)
 		{
 			new_file_validators.emplace_back(std::move(file_path));
 		}
@@ -46,7 +46,7 @@ namespace llv
 
 	void line_length_validator::update_files_overview()
 	{
-		for(auto& file_validator : file_validators_)
+		for (auto& file_validator : file_validators_)
 		{
 			file_validator.update_overview(validator_settings());
 		}
@@ -54,11 +54,12 @@ namespace llv
 
 	std::vector<std::filesystem::path> line_length_validator::files_to_validate() const
 	{
-		const auto has_extension = [this](const std::wstring& str) -> bool
+		const auto has_extension = [this](const std::wstring file_extension) -> bool
 		{
 			for (const auto& extension : validator_settings().file_extensions_to_validate)
 			{
-				if (str.length() < extension.length())
+				// todo, remove later, once we get extenstion to be wstring, since string cmp operator does the length compare anyway
+				if (file_extension.length() != extension.length())
 				{
 					continue;
 				}
@@ -67,7 +68,7 @@ namespace llv
 				std::wstring tmp_ext_wstring{};
 				tmp_ext_wstring.assign(extension.begin(), extension.end());
 
-				if (str.find(tmp_ext_wstring, str.size() - tmp_ext_wstring.size()) != std::string::npos)
+				if (file_extension == tmp_ext_wstring)
 				{
 					return true;
 				}
@@ -78,7 +79,7 @@ namespace llv
 
 		// Passing a path to a file instead of a directory does not require extensions
 		// Nor will abide any provided ones
-		if(std::filesystem::is_regular_file(path()))
+		if (std::filesystem::is_regular_file(path()))
 		{
 			return { path() };
 		}
@@ -88,7 +89,7 @@ namespace llv
 		std::vector<std::filesystem::path> found_files_paths;
 		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(path()))
 		{
-			if (directory_entry.is_regular_file() && has_extension(directory_entry.path().wstring()))
+			if (directory_entry.is_regular_file() && has_extension(directory_entry.path().extension()))
 			{
 				found_files_paths.push_back(directory_entry.path());
 			}

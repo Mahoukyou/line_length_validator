@@ -52,11 +52,11 @@ int main(const int argc, char** argv)
 
 	const auto arguments = parse_arguments(argc, argv);
 	llv::line_length_validator llv{ arguments.settings, arguments.file_path };
-	
+
 	llv.validate();
-	for(const auto& file_validator : llv.file_validators())
+	for (const auto& file_validator : llv.file_validators())
 	{
-		if(file_validator.results().empty())
+		if (file_validator.results().empty())
 		{
 			continue;
 		}

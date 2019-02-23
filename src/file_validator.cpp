@@ -8,10 +8,10 @@ namespace llv
 		file_path_{ std::move(file_path) },
 		is_validated_{ false },
 		is_overview_updated_{ false }
-		
 	{
 
 	}
+
 	bool file_validator::validate(const validator_settings& settings)
 	{
 		std::ifstream file_stream{ file_path_ };
@@ -30,7 +30,7 @@ namespace llv
 		size_t line_index{ 1 };
 		for (std::string line; std::getline(file_stream, line); ++line_index)
 		{
-			if (const auto error_type = validate_line(line, settings); 
+			if (const auto error_type = validate_line(line, settings);
 				error_type.has_value())
 			{
 				// todo, emplace back
@@ -46,7 +46,7 @@ namespace llv
 					++new_overview.error_count;
 					break;
 
-				default: 
+				default:
 					break;
 				}
 			}
