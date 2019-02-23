@@ -87,7 +87,7 @@ namespace llv
 		// todo, maybe use directory_entry instead of to get files/store them?
 		// refactor later in case we need to check if our data is dirty instead of re-validating everything
 		std::vector<std::filesystem::path> found_files_paths;
-		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(path()))
+		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(path(), std::filesystem::directory_options::skip_permission_denied))
 		{
 			if (directory_entry.is_regular_file() && has_extension(directory_entry.path().extension()))
 			{
