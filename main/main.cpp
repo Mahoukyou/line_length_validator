@@ -31,7 +31,7 @@ void print_validation_info(const llv::file_validator& file_validator)
 			break;
 		}
 
-		std::cout << '\n' << error.line << cdefault << '\n';
+		std::wcout << '\n' << error.line << cdefault << '\n';
 	}
 
 	std::cout << '\n';

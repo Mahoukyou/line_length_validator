@@ -14,7 +14,7 @@ namespace llv
 
 	bool file_validator::validate(const validator_settings& settings)
 	{
-		std::ifstream file_stream{ file_path_ };
+		std::wifstream file_stream{ file_path_ };
 		if (!file_stream.good())
 		{
 			// set it to false, but let's leave the old results intact.
@@ -28,7 +28,7 @@ namespace llv
 
 		// todo, wstring?
 		size_t line_index{ 1 };
-		for (std::string line; std::getline(file_stream, line); ++line_index)
+		for (std::wstring line; std::getline(file_stream, line); ++line_index)
 		{
 			if (const auto error_type = validate_line(line, settings);
 				error_type.has_value())
@@ -67,7 +67,7 @@ namespace llv
 	{
 		overview_ = file_overview{};
 
-		std::ifstream file_stream{ file_path() };
+		std::wifstream file_stream{ file_path() };
 		if (!file_stream.good())
 		{
 			is_overview_updated_ = false;
@@ -75,7 +75,7 @@ namespace llv
 		}
 
 		// todo, wstring?
-		for (std::string line; std::getline(file_stream, line);)
+		for (std::wstring line; std::getline(file_stream, line);)
 		{
 			++overview_.line_count;
 			if (const auto error_type = validate_line(line, settings);
@@ -126,12 +126,12 @@ namespace llv
 		return file_name.substr(file_name_begin_index + 1);
 	}
 
-	std::optional<e_error_type> file_validator::validate_line(const std::string& line, const llv::validator_settings& settings)
+	std::optional<e_error_type> file_validator::validate_line(const std::wstring& line, const llv::validator_settings& settings)
 	{
-		size_t line_length = line.size();
-		if (settings.count_tab_as_amount_of_characters == 1)
+		auto line_length = line.size();
+		if (settings.count_tab_as_amount_of_characters != 1)
 		{
-			const auto tab_count = std::count(line.begin(), line.end(), '\t');
+			const auto tab_count = std::count(line.begin(), line.end(), L'\t');
 			line_length += tab_count * settings.count_tab_as_amount_of_characters - tab_count;
 		}
 

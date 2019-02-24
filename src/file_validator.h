@@ -16,7 +16,7 @@ namespace llv
 
 	struct file_line_error
 	{
-		std::string line; // todo, consider wstring
+		std::wstring line;
 		size_t line_number{};
 		e_error_type error_type;
 	};
@@ -72,7 +72,7 @@ namespace llv
 		}
 
 	private:
-		static std::optional<e_error_type> validate_line(const std::string& line, const llv::validator_settings& settings);
+		static std::optional<e_error_type> validate_line(const std::wstring& line, const llv::validator_settings& settings);
 
 		std::filesystem::path file_path_;
 
