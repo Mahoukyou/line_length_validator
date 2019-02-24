@@ -2,14 +2,20 @@
 
 #include "validator_settings.h"
 #include "file_validator.h"
+
+#include <filesystem>
 #include <string>
+
+#ifndef _WIN32
+	static_assert(0, "Only Windows is supported at the moment");
+#endif
 
 namespace llv
 {
 	class line_length_validator
 	{
 	public:
-		line_length_validator(validator_settings settings, std::string root_directory);
+		line_length_validator(validator_settings settings, std::filesystem::path path);
 		~line_length_validator() = default;
 
 		line_length_validator(const line_length_validator&) = delete;
@@ -18,9 +24,9 @@ namespace llv
 		line_length_validator& operator=(const line_length_validator&) = delete;
 		line_length_validator& operator=(line_length_validator&&) noexcept = delete;
 
-		const std::string& root_directory() const noexcept
+		const std::filesystem::path& path() const noexcept
 		{
-			return root_directory_;
+			return path_;
 		}
 
 		const validator_settings& validator_settings() const noexcept
@@ -39,11 +45,11 @@ namespace llv
 		void update_files_in_directory();
 
 	private:
-		std::vector<std::string> files_to_validate() const;
+		std::vector<std::filesystem::path> files_to_validate() const;
 
 		std::vector<llv::file_validator> file_validators_;
 
 		llv::validator_settings validator_settings_;
-		std::string root_directory_;
+		std::filesystem::path path_;
 	};
 }

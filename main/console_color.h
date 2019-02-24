@@ -1,8 +1,8 @@
 #pragma once
+
 #include <ostream>
 #include <windows.h>
 
-// todo, unix 
 class console_color
 {
 public:
@@ -25,6 +25,11 @@ public:
 		return os;
 	}
 
+	friend std::wostream& operator<<(std::wostream& os, const console_color& cc)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), cc.color_);
+		return os;
+	}
 
 private:
 	const WORD color_;
@@ -32,10 +37,10 @@ private:
 
 inline console_color get_default_console_color()
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi_info;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi_info);
+	CONSOLE_SCREEN_BUFFER_INFO console_screen_buffer_info;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &console_screen_buffer_info);
 
-	return console_color{ csbi_info.wAttributes };
+	return console_color{ console_screen_buffer_info.wAttributes };
 }
 
 inline console_color cred{ console_color::color_red };
