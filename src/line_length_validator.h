@@ -49,7 +49,10 @@ namespace llv
 			return file_validators_[index];
 		}
 
-		bool is_path_valid() const;
+		bool is_path_valid() const
+		{
+			return exists(path()) && (is_regular_file(path()) || is_directory(path()));
+		}
 
 		void validate(size_t index);
 		void validate(bool update_directory_files = true);

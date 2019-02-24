@@ -6,6 +6,9 @@
 #include <filesystem>
 #include "validator_settings.h"
 
+// TODO use the error overloaded functions
+// so we won't have to catch any exceptions
+
 namespace llv
 {
 	enum class e_error_type 
@@ -44,15 +47,18 @@ namespace llv
 		bool validate(const validator_settings& settings);
 		bool update_overview(const validator_settings& settings);
 
-		bool is_validated() const noexcept
+		bool is_validation_cached() const noexcept
 		{
-			return is_validated_;
+			return is_validation_cached_;
 		}
 
-		bool is_overview_updated() const noexcept
+		bool is_overview_cached() const noexcept
 		{
-			return is_overview_updated_;
+			return is_overview_cached_;
 		}
+
+		bool is_validation_cache_up_to_date() const;
+		bool is_overview_cache_up_to_date() const;
 
 		const std::filesystem::path& file_path() const noexcept
 		{
@@ -60,6 +66,13 @@ namespace llv
 		}
 
 		std::wstring file_name() const;
+
+		bool exists() const
+		{
+			// Making sure the object exists and is still a file
+			return std::filesystem::exists(file_path()) && 
+				is_regular_file(file_path());
+		}
 
 		const auto& results() const noexcept
 		{
@@ -79,7 +92,12 @@ namespace llv
 		std::vector<file_line_error> results_;
 		file_overview overview_;
 
-		bool is_validated_;
-		bool is_overview_updated_;
+		// todo, discard the booleans and use last time modified == 0?
+		bool is_validation_cached_;
+		bool is_overview_cached_;
+
+		std::filesystem::file_time_type validation_cache_last_file_modification_;
+		std::filesystem::file_time_type overview_cache_last_file_modification_;
+
 	};
 }

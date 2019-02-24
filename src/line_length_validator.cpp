@@ -12,29 +12,23 @@ namespace llv
 
 	}
 
-
-	bool line_length_validator::is_path_valid() const
-	{
-		using std::filesystem::exists, std::filesystem::is_regular_file, std::filesystem::is_directory;
-
-		return exists(path()) && (is_regular_file(path()) || is_directory(path()));
-	}
-
 	void line_length_validator::validate(const size_t index)
 	{
-		if(file_validators().size() >= index)
+		if (file_validators().size() >= index)
 		{
 			return; // todo
 		}
 
-		// todo change if updated, if so check if file changed in directory
-		file_validator(index).validate(validator_settings());
+		if (!file_validator(index).is_validation_cache_up_to_date())
+		{
+			file_validator(index).validate(validator_settings());
+		}
 	}
 
 
 	void line_length_validator::validate(const bool update_directory_files)
 	{
-		// todo to some check for dirty cache and update only when needed without the variable
+		// todo to some check for dirty cache and update only when needed without the variable (the files in directory, not an actual file)
 		// same thing for overview update
 		if (update_directory_files)
 		{
@@ -43,7 +37,10 @@ namespace llv
 
 		for (auto& file_validator : file_validators_)
 		{
-			file_validator.validate(validator_settings());
+			if (!file_validator.is_validation_cache_up_to_date())
+			{
+				file_validator.validate(validator_settings());
+			}
 		}
 	}
 
@@ -54,15 +51,22 @@ namespace llv
 			return; // todo
 		}
 
-		// todo change if updated, if so check if file changed in directory
-		file_validator(index).update_overview(validator_settings());
+		if (!file_validator(index).is_overview_cache_up_to_date())
+		{
+			file_validator(index).update_overview(validator_settings());
+		}
 	}
 
 	void line_length_validator::update_overview()
 	{
+		// todo, update directories?
+
 		for (auto& file_validator : file_validators_)
 		{
-			file_validator.update_overview(validator_settings());
+			if (!file_validator.is_overview_cache_up_to_date())
+			{
+				file_validator.update_overview(validator_settings());
+			}
 		}
 	}
 
@@ -91,7 +95,7 @@ namespace llv
 	{
 		// Passing a path to a file instead of a directory does not require extensions
 		// Nor will abide any provided ones
-		if (std::filesystem::is_regular_file(path()))
+		if (is_regular_file(path()))
 		{
 			return { path() };
 		}
@@ -102,7 +106,7 @@ namespace llv
 		const auto& extensions = validator_settings().file_extensions_to_validate;
 		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(path(), std::filesystem::directory_options::skip_permission_denied))
 		{
-			if (directory_entry.is_regular_file() && 
+			if (directory_entry.is_regular_file() &&
 				std::find(extensions.begin(), extensions.end(), directory_entry.path().extension()) != extensions.end())
 			{
 				found_files_paths.push_back(directory_entry.path());

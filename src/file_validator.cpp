@@ -6,19 +6,25 @@ namespace llv
 {
 	file_validator::file_validator(std::filesystem::path file_path) :
 		file_path_{ std::move(file_path) },
-		is_validated_{ false },
-		is_overview_updated_{ false }
+		is_validation_cached_{ false },
+		is_overview_cached_{ false }
 	{
 
 	}
 
 	bool file_validator::validate(const validator_settings& settings)
 	{
-		std::wifstream file_stream{ file_path_ };
+		if (!exists())
+		{
+			// todo, better error msg
+			return false;
+		}
+
+		const auto last_file_modification = last_write_time(file_path());
+
+		std::wifstream file_stream{ file_path() };
 		if (!file_stream.good())
 		{
-			// set it to false, but let's leave the old results intact.
-			is_validated_ = false;
 			return false;
 		}
 
@@ -26,7 +32,6 @@ namespace llv
 		std::vector<file_line_error> new_results;
 		new_results.reserve(results().size());
 
-		// todo, wstring?
 		size_t line_index{ 1 };
 		for (std::wstring line; std::getline(file_stream, line); ++line_index)
 		{
@@ -57,24 +62,31 @@ namespace llv
 		results_ = std::move(new_results);
 		overview_ = new_overview;
 
-		is_validated_ = true;
-		is_overview_updated_ = true;
+		is_validation_cached_ = true;
+		is_overview_cached_ = true;
+		validation_cache_last_file_modification_ = last_file_modification;
+		overview_cache_last_file_modification_ = last_file_modification;
 
 		return true;
 	}
 
 	bool file_validator::update_overview(const validator_settings& settings)
 	{
-		overview_ = file_overview{};
-
-		std::wifstream file_stream{ file_path() };
-		if (!file_stream.good())
+		if (!exists())
 		{
-			is_overview_updated_ = false;
+			// todo, better error msg
 			return false;
 		}
 
-		// todo, wstring?
+		const auto last_file_modification = last_write_time(file_path());
+
+		overview_ = file_overview{};
+		std::wifstream file_stream{ file_path() };
+		if (!file_stream.good())
+		{
+			return false;
+		}
+
 		for (std::wstring line; std::getline(file_stream, line);)
 		{
 			++overview_.line_count;
@@ -97,9 +109,30 @@ namespace llv
 			}
 		}
 
-		is_overview_updated_ = true;
+		is_overview_cached_ = true;
+		overview_cache_last_file_modification_ = last_file_modification;
 
 		return true;
+	}
+
+	bool file_validator::is_validation_cache_up_to_date() const
+	{
+		if (!is_validation_cached() || !exists())
+		{
+			return false;
+		}
+
+		return validation_cache_last_file_modification_ == last_write_time(file_path());
+	}
+
+	bool file_validator::is_overview_cache_up_to_date() const
+	{
+		if (!is_overview_cached() || !exists())
+		{
+			return false;
+		}
+
+		return overview_cache_last_file_modification_ == last_write_time(file_path());
 	}
 
 	std::wstring file_validator::file_name() const
