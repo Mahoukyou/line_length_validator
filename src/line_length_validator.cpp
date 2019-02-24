@@ -89,29 +89,6 @@ namespace llv
 
 	std::vector<std::filesystem::path> line_length_validator::files_to_validate() const
 	{
-		const auto has_extension = [this](const std::wstring file_extension) -> bool
-		{
-			for (const auto& extension : validator_settings().file_extensions_to_validate)
-			{
-				// todo, remove later, once we get extenstion to be wstring, since string cmp operator does the length compare anyway
-				if (file_extension.length() != extension.length())
-				{
-					continue;
-				}
-
-				//todo, for now, refactor extensions later
-				std::wstring tmp_ext_wstring{};
-				tmp_ext_wstring.assign(extension.begin(), extension.end());
-
-				if (file_extension == tmp_ext_wstring)
-				{
-					return true;
-				}
-			}
-
-			return false;
-		};
-
 		// Passing a path to a file instead of a directory does not require extensions
 		// Nor will abide any provided ones
 		if (std::filesystem::is_regular_file(path()))
@@ -122,9 +99,11 @@ namespace llv
 		// todo, maybe use directory_entry instead of to get files/store them?
 		// refactor later in case we need to check if our data is dirty instead of re-validating everything
 		std::vector<std::filesystem::path> found_files_paths;
+		const auto& extensions = validator_settings().file_extensions_to_validate;
 		for (auto& directory_entry : std::filesystem::recursive_directory_iterator(path(), std::filesystem::directory_options::skip_permission_denied))
 		{
-			if (directory_entry.is_regular_file() && has_extension(directory_entry.path().extension()))
+			if (directory_entry.is_regular_file() && 
+				std::find(extensions.begin(), extensions.end(), directory_entry.path().extension()) != extensions.end())
 			{
 				found_files_paths.push_back(directory_entry.path());
 			}
