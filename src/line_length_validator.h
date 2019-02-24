@@ -39,9 +39,24 @@ namespace llv
 			return file_validators_;
 		}
 
+		auto& file_validator(const size_t index)
+		{
+			return file_validators_[index];
+		}
+
+		const auto& file_validator(const size_t index) const
+		{
+			return file_validators_[index];
+		}
+
 		bool is_path_valid() const;
+
+		void validate(size_t index);
 		void validate(bool update_directory_files = true);
-		void update_files_overview();
+
+		void update_overview(size_t index);
+		void update_overview();
+
 		void update_files_in_directory();
 
 	private:

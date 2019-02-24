@@ -20,6 +20,18 @@ namespace llv
 		return exists(path()) && (is_regular_file(path()) || is_directory(path()));
 	}
 
+	void line_length_validator::validate(const size_t index)
+	{
+		if(file_validators().size() >= index)
+		{
+			return; // todo
+		}
+
+		// todo change if updated, if so check if file changed in directory
+		file_validator(index).validate(validator_settings());
+	}
+
+
 	void line_length_validator::validate(const bool update_directory_files)
 	{
 		// todo to some check for dirty cache and update only when needed without the variable
@@ -35,6 +47,25 @@ namespace llv
 		}
 	}
 
+	void line_length_validator::update_overview(const size_t index)
+	{
+		if (file_validators().size() >= index)
+		{
+			return; // todo
+		}
+
+		// todo change if updated, if so check if file changed in directory
+		file_validator(index).update_overview(validator_settings());
+	}
+
+	void line_length_validator::update_overview()
+	{
+		for (auto& file_validator : file_validators_)
+		{
+			file_validator.update_overview(validator_settings());
+		}
+	}
+
 	void line_length_validator::update_files_in_directory()
 	{
 		if (!is_path_valid())
@@ -45,7 +76,7 @@ namespace llv
 		// todo, or just simply work on the original one?
 		auto files_in_directory = files_to_validate();
 
-		std::vector<file_validator> new_file_validators;
+		std::vector<llv::file_validator> new_file_validators;
 		new_file_validators.reserve(files_in_directory.size());
 
 		for (auto& file_path : files_in_directory)
@@ -54,14 +85,6 @@ namespace llv
 		}
 
 		file_validators_ = std::move(new_file_validators);
-	}
-
-	void line_length_validator::update_files_overview()
-	{
-		for (auto& file_validator : file_validators_)
-		{
-			file_validator.update_overview(validator_settings());
-		}
 	}
 
 	std::vector<std::filesystem::path> line_length_validator::files_to_validate() const
