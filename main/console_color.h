@@ -1,8 +1,8 @@
 #pragma once
+
 #include <ostream>
 #include <windows.h>
 
-// todo, unix 
 class console_color
 {
 public:

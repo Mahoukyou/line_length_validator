@@ -3,6 +3,10 @@
 #include "argument_parser.h"
 #include <iostream>	
 
+#ifndef _WIN32
+	static_assert(0, "Only Windows is supported at the moment");
+#endif
+
 void print_validation_info(const llv::file_validator& file_validator)
 {
 	std::wcout << "File: " << file_validator.file_name();
@@ -33,7 +37,7 @@ void print_validation_info(const llv::file_validator& file_validator)
 	std::cout << '\n';
 }
 
-int main(const int argc, char** argv)
+int wmain(const int argc, wchar_t** argv)
 {
 	if (has_an_argument(argc, argv, argument_help))
 	{
@@ -45,7 +49,7 @@ int main(const int argc, char** argv)
 	if (argc < 3)
 	{
 		std::cout << "You have to pass at least a path to a file or directory.\n";
-		std::cout << "Use " << possible_arguments[argument_path].data() << " [path] to do so.\n";
+		std::wcout << "Use " << possible_arguments[argument_path].data() << " [path] to do so.\n";
 		std::cout << "Use --help to see all available launch arguments\n";
 		return 1;
 	}

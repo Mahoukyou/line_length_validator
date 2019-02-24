@@ -14,6 +14,6 @@ namespace llv
 
 		bool print_file_absolute_location{};
 
-		std::vector<std::string> file_extensions_to_validate;
+		std::vector<std::wstring> file_extensions_to_validate;
 	};
 }

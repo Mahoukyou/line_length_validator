@@ -6,6 +6,10 @@
 #include <filesystem>
 #include <string>
 
+#ifndef _WIN32
+	static_assert(0, "Only Windows is supported at the moment");
+#endif
+
 namespace llv
 {
 	class line_length_validator
