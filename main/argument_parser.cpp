@@ -1,10 +1,14 @@
 #include "argument_parser.h"
 
+#include <cwchar>
+#include <limits>
+#include <iostream>
+
 void display_help()
 {
-	for (int i = 0; i < argument_max; ++i)
+	for (auto i = 0; i < argument_max; ++i)
 	{
-		std::cout << possible_arguments[i].data();
+		std::wcout << possible_arguments[i].data();
 		switch (i)
 		{
 		case argument_help:
@@ -34,7 +38,7 @@ void display_help()
 
 		case argument_file_extensions:
 			std::cout << " - extensions to validate separated by a space. You can prefix them with dot or not\n";
-			std::cout << "Example usage: " << possible_arguments[i].data() << " cpp hpp .c .h\n";
+			std::wcout << "Example usage: " << possible_arguments[i].data() << " cpp hpp .c .h\n";
 			break;
 
 		default:
@@ -43,11 +47,11 @@ void display_help()
 	}
 }
 
-e_argument is_an_argument(const char* const arg)
+e_argument is_an_argument(const wchar_t* const arg)
 {
 	for (size_t i = 0; i < possible_arguments.size(); ++i)
 	{
-		if (strcmp(arg, possible_arguments[i].data()) == 0)
+		if (std::wcscmp(arg, possible_arguments[i].data()) == 0)
 		{
 			return static_cast<e_argument>(i);
 		}
@@ -56,11 +60,11 @@ e_argument is_an_argument(const char* const arg)
 	return argument_max;
 }
 
-bool has_an_argument(const int argc, const char* const* const argv, const e_argument argument)
+bool has_an_argument(const int argc, const wchar_t* const* const argv, const e_argument argument)
 {
-	for (int i = 1; i < argc; ++i)
+	for (auto i = 1; i < argc; ++i)
 	{
-		if (std::strcmp(argv[i], possible_arguments[argument].data()) == 0)
+		if (std::wcscmp(argv[i], possible_arguments[argument].data()) == 0)
 		{
 			return true;
 		}
@@ -69,25 +73,45 @@ bool has_an_argument(const int argc, const char* const* const argv, const e_argu
 	return false;
 }
 
-std::optional<unsigned> parse_to_uint(const char* const arg)
+std::optional<unsigned> parse_to_uint(const wchar_t* const arg)
 {
-	const auto arg_end = strchr(arg, '\0');
+	// It is kinda crappy, because we don't get an explicit answer if the string was converted without an issue
+	// We get either 0 or ULONG_MAX, so if we pass an L"0", the return value is ambiguous (same for ULONG_MAX)
 
-	unsigned parsed_value{ 0 };
-	const auto parse_result = std::from_chars(arg, arg_end, parsed_value);
-	if (parse_result.ec != std::errc())
+	// For this console app, lets just assume that if we get ULONG_MAX it was an error (converted value fell out of range of unsigned long)
+	// Because any of our argument values should not even exceed 16bit integer
+	// And that if we get 0, we will check if the first character is equal to L'0'
+	// Damn, wide chars causing so many problems
+
+	// todo, write own function for conversion?
+
+	wchar_t *dummy{};
+	const auto result = wcstoul(arg, &dummy, 10);
+
+	if(result == std::numeric_limits<decltype(result)>::max())
 	{
 		return std::nullopt;
 	}
 
-	return { parsed_value };
+	if(result == 0 && wcsncmp(arg, L"0", 1) != 0)
+	{
+		return std::nullopt;
+	}
+
+	// We even have to convert to unsigned, because there are only functions for long/ulong
+	if(result > std::numeric_limits<unsigned>::max())
+	{
+		return std::nullopt;
+	}
+
+	return { result };
 }
 
-parsed_arguments parse_arguments(const int argc, const char* const* const argv)
+parsed_arguments parse_arguments(const int argc, const wchar_t* const* const argv)
 {
 	// todo refactor errors
-	parsed_arguments pa{ "", {80, 100, 4, false, {}} };
-	for (int i = 1; i < argc; ++i)
+	parsed_arguments pa{ L"", {80, 100, 4, false, {}} };
+	for (auto i = 1; i < argc; ++i)
 	{
 		if (const auto argument = is_an_argument(argv[i]);
 			argument != argument_max)
@@ -210,10 +234,10 @@ parsed_arguments parse_arguments(const int argc, const char* const* const argv)
 					}
 					else
 					{
-						std::string extenstion{ '.' };
-						extenstion += argv[i + 1];
+						std::wstring extension{ L'.' };
+						extension += argv[i + 1];
 
-						pa.settings.file_extensions_to_validate.push_back(std::move(extenstion));
+						pa.settings.file_extensions_to_validate.push_back(std::move(extension));
 					}
 
 					++i;
@@ -232,7 +256,7 @@ parsed_arguments parse_arguments(const int argc, const char* const* const argv)
 		}
 		else
 		{
-			std::cout << "argument - [" << argv[i] << "] not recognized\n";
+			std::wcout << "argument - [" << argv[i] << "] not recognized\n";
 		}
 	}
 
