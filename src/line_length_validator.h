@@ -39,6 +39,7 @@ namespace llv
 			return file_validators_;
 		}
 
+		bool is_path_valid() const;
 		void validate(bool update_directory_files = true);
 		void update_files_overview();
 		void update_files_in_directory();

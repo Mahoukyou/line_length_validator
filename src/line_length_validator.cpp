@@ -13,6 +13,13 @@ namespace llv
 	}
 
 
+	bool line_length_validator::is_path_valid() const
+	{
+		using std::filesystem::exists, std::filesystem::is_regular_file, std::filesystem::is_directory;
+
+		return exists(path()) && (is_regular_file(path()) || is_directory(path()));
+	}
+
 	void line_length_validator::validate(const bool update_directory_files)
 	{
 		// todo to some check for dirty cache and update only when needed without the variable
@@ -30,6 +37,11 @@ namespace llv
 
 	void line_length_validator::update_files_in_directory()
 	{
+		if (!is_path_valid())
+		{
+			return; // todo, return type error
+		}
+
 		// todo, or just simply work on the original one?
 		auto files_in_directory = files_to_validate();
 
