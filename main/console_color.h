@@ -8,8 +8,8 @@ class console_color
 public:
 	enum : unsigned char
 	{
-		color_red = 12,
 		color_green = 10,
+		color_red = 12,
 		color_yellow = 14,
 	};
 
@@ -43,7 +43,7 @@ inline console_color get_default_console_color()
 	return console_color{ console_screen_buffer_info.wAttributes };
 }
 
-inline console_color cred{ console_color::color_red };
-inline console_color cgreen{ console_color::color_green };
-inline console_color cyellow{ console_color::color_yellow };
-inline console_color cdefault{ get_default_console_color() };
+inline constexpr console_color cred{ console_color::color_red };
+inline constexpr console_color cgreen{ console_color::color_green };
+inline constexpr console_color cyellow{ console_color::color_yellow };
+inline const console_color cdefault{ get_default_console_color() };
