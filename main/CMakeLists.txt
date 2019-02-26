@@ -5,6 +5,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(
 	exec_srcs
 	main.cpp
+	console_color.h
+	console_color.cpp
+	argument_parser.h
+	argument_parser.cpp
 )
 add_executable(exec ${exec_srcs})
 set_target_properties(exec PROPERTIES LINKER_LANGUAGE CXX)
