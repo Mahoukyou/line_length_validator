@@ -115,6 +115,44 @@ std::optional<unsigned> parse_to_uint(const wchar_t* const arg)
 
 parsed_arguments parse_arguments(const int argc, const wchar_t* const* const argv)
 {
+	const auto is_next_argument_an_value = [&](const int current_index) -> bool
+	{
+		const auto next_index = current_index + 1;
+		return next_index < argc && is_an_argument(argv[next_index]) == e_argument::max;
+	};
+
+	// todo, rename more appropriately, sound like we are going to look for next uint value, and not just check the next value
+	const auto set_to_next_uint_argument = [&](unsigned& destination, int& argument_index) -> bool
+	{
+		if (is_next_argument_an_value(argument_index))
+		{
+			if (const auto parsed_uint = parse_to_uint(argv[argument_index + 1]);
+				parsed_uint.has_value())
+			{
+				destination = parsed_uint.value();
+			}
+			else
+			{
+				std::wcout << "[" << argv[argument_index] << "] - Failed to parse argument value [";
+				std::wcout << argv[argument_index + 1] << "] to unsigned int\n";
+				
+				++argument_index;
+				return false;
+			}
+
+			++argument_index;
+		}
+		else
+		{
+			std::wcout << "[" << argv[argument_index] << "] - is not associated with any value\n";
+			return false;
+		}
+
+		return true;
+	};
+
+	bool parse_succeeded{ true };
+
 	// todo refactor errors
 	parsed_arguments pa{ L"", {80, 100, 4, false, {}} };
 	for (auto i = 1; i < argc; ++i)
@@ -131,7 +169,7 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 			case e_argument::path:
 				// TODO, should I leave the check if the next string is a different argument
 				// or just simply take it as the path?
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
+				if (is_next_argument_an_value(i))
 				{
 					pa.file_path = argv[i + 1];
 					// todo take path until we encounter another argument (because path may contain a space?)
@@ -140,98 +178,58 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 					break;
 				}
 
+				parse_succeeded = false;
+
 				std::cout << "err with --path arg\n"; // todo
 				break;
 
 			case e_argument::warning_line_length:
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
+				if(!set_to_next_uint_argument(pa.settings.warning_line_length, i))
 				{
-					if (const auto warning_length = parse_to_uint(argv[i + 1]);
-						warning_length.has_value())
-					{
-						pa.settings.warning_line_length = warning_length.value();
-					}
-					else
-					{
-						std::cout << "coulnd parse war\n";
-					}
-
-					++i;
-					break;
+					parse_succeeded = false;
 				}
-
-				std::cout << "warl err\n"; // todo
+				
 				break;
 
 			case e_argument::error_line_length:
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
+				if(!set_to_next_uint_argument(pa.settings.error_line_length, i))
 				{
-					if (const auto error_length = parse_to_uint(argv[i + 1]);
-						error_length.has_value())
-					{
-						pa.settings.error_line_length = error_length.value();
-					}
-					else
-					{
-						std::cout << "coulnd parse err\n";
-					}
-
-					++i;
-					break;
+					parse_succeeded = false;
 				}
 
-				std::cout << "errl err\n"; // todo
 				break;
 
 			case e_argument::tab_to_spaces:
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
+				if(!set_to_next_uint_argument(pa.settings.count_tab_as_amount_of_characters, i))
 				{
-					if (const auto chars_per_tabulator = parse_to_uint(argv[i + 1]);
-						chars_per_tabulator.has_value())
-					{
-						pa.settings.count_tab_as_amount_of_characters = chars_per_tabulator.value();
-					}
-					else
-					{
-						std::cout << "coulnd parse tabs\n";
-					}
+					parse_succeeded = false;
+				};
 
-					++i;
-					break;
-				}
-
-				std::cout << "tabs err\n"; // todo
 				break;
 
 			case e_argument::print_absolute_file_location:
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
+			{
+				unsigned dummy{};
+				if(!set_to_next_uint_argument(dummy, i))
 				{
-					if (const auto result = parse_to_uint(argv[i + 1]);
-						result.has_value())
-					{
-						if (result == 0 || result == 1)
-						{
-							pa.settings.print_file_absolute_location = static_cast<bool>(result);
-						}
-						else
-						{
-							std::cout << "invalid value";
-						}
-					}
-					else
-					{
-						std::cout << "coulnd parse tabs\n";
-					}
-
-					++i;
+					parse_succeeded = false;
 					break;
+				};
+
+				if (dummy == 0 || dummy == 1)
+				{
+					pa.settings.print_file_absolute_location = dummy == 1;
+				}
+				else
+				{
+					std::wcout << "[" << argv[i] << "] - invalid value. Can accept only 0 or 1";
 				}
 
-				std::cout << "tabs err\n"; // todo
 				break;
+			}
 
 			case e_argument::file_extensions:
-				while(i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
+				while(is_next_argument_an_value(i))
 				{
 					// todo,  duplicates
 					if ((argv[i + 1])[0] == '.')
@@ -254,10 +252,12 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 					std::cout << "coulnd't find/parse extenstions\n";
 				}
 
+				parse_succeeded = false;
 				break;
 
 			default:
 				std::cout << " - ERROR, parse was not set for this argument\n";
+				parse_succeeded = false;
 			}
 		}
 		else
@@ -265,6 +265,8 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 			std::wcout << "argument - [" << argv[i] << "] not recognized\n";
 		}
 	}
+
+	// todo, return value;
 
 	return pa;
 }
