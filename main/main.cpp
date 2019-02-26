@@ -49,14 +49,15 @@ int wmain(const int argc, wchar_t** argv)
 		argc < min_arguments_required)
 	{
 		std::cout << "You have to pass at least a path to a file or directory.\n";
-		std::wcout << "Use " << get_argument(e_argument::path).data() << " [path] to do so.\n";
-		std::cout << "Use --help to see all available launch arguments\n";
+		std::wcout << "Use [" << get_argument(e_argument::path) << "] [path] to do so.\n";
+		std::wcout << "Use [" << get_argument(e_argument::help) << "] to see all available launch arguments\n";
 		return 1;
 	}
 
 	auto parse_result = parse_arguments(argc, argv);
 	if(!parse_result.has_value())
 	{
+		std::wcout << "Use [" << get_argument(e_argument::help) << "] to see all available launch arguments\n";
 		return 2;
 	}
 

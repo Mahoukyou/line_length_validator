@@ -1,4 +1,8 @@
 #include "argument_parser.h"
+#include "console_color.h"
+
+// Windows.h include in console_color causes problems with std::numeric_limits<>::max();
+#undef max
 
 #include <cwchar>
 #include <limits>
@@ -9,7 +13,7 @@ void display_help()
 {
 	for (auto i = 0; i < static_cast<int>(e_argument::max); ++i)
 	{
-		std::wcout << possible_arguments[i].data();
+		std::wcout << cgreen << possible_arguments[i] << cdefault;
 		switch (static_cast<e_argument>(i))
 		{
 		case e_argument::help:
@@ -18,6 +22,7 @@ void display_help()
 
 		case e_argument::path:
 			std::cout << " - path to validate, can be either path to file or a directory\n";
+			std::cout << "If your path contains white spaces, use \"\"\n";
 			break;
 
 		case e_argument::warning_line_length:
@@ -29,7 +34,7 @@ void display_help()
 			break;
 
 		case e_argument::tab_to_spaces:
-			std::cout << " - amount of characters to convert tabs to during line length validation.";
+			std::cout << " - amount of characters to convert tabs to during line length validation\n";
 			std::cout << "Settings this to n means that one tab character will be counted as n character\n";
 			break;
 
@@ -39,7 +44,7 @@ void display_help()
 
 		case e_argument::file_extensions:
 			std::cout << " - extensions to validate separated by a space. You can prefix them with dot or not\n";
-			std::wcout << "Example usage: " << possible_arguments[i].data() << " cpp hpp .c .h\n";
+			std::wcout << "Example usage: " << possible_arguments[i] << " cpp hpp .c .h\n";
 			break;
 
 		default:
@@ -168,20 +173,17 @@ std::optional<parsed_arguments> parse_arguments(const int argc, const wchar_t* c
 				break;
 
 			case e_argument::path:
-				// TODO, should I leave the check if the next string is a different argument
-				// or just simply take it as the path?
 				if (is_next_argument_an_value(i))
 				{
+					// If user wants to pass a path with a space, he will have to use "" to do so
 					pa.file_path = argv[i + 1];
-					// todo take path until we encounter another argument (because path may contain a space?)
 
 					++i;
 					break;
 				}
 
 				parse_succeeded = false;
-
-				std::cout << "err with --path arg\n"; // todo
+				std::wcout << "[" << argv[i] << "] - is not associated with any value\n";
 				break;
 
 			case e_argument::warning_line_length:
@@ -189,7 +191,6 @@ std::optional<parsed_arguments> parse_arguments(const int argc, const wchar_t* c
 				{
 					parse_succeeded = false;
 				}
-
 				break;
 
 			case e_argument::error_line_length:
@@ -197,7 +198,6 @@ std::optional<parsed_arguments> parse_arguments(const int argc, const wchar_t* c
 				{
 					parse_succeeded = false;
 				}
-
 				break;
 
 			case e_argument::tab_to_spaces:
@@ -205,7 +205,6 @@ std::optional<parsed_arguments> parse_arguments(const int argc, const wchar_t* c
 				{
 					parse_succeeded = false;
 				};
-
 				break;
 
 			case e_argument::print_absolute_file_location:
@@ -225,7 +224,6 @@ std::optional<parsed_arguments> parse_arguments(const int argc, const wchar_t* c
 				{
 					std::wcout << "[" << argv[i] << "] - invalid value. Can accept only 0 or 1";
 				}
-
 				break;
 			}
 
@@ -258,7 +256,6 @@ std::optional<parsed_arguments> parse_arguments(const int argc, const wchar_t* c
 					extensions_vector.erase(one_past_unique_it, extensions_vector.end());
 					extensions_vector.shrink_to_fit();
 				}
-
 				break;
 			}
 			default:
@@ -280,6 +277,7 @@ std::optional<parsed_arguments> parse_arguments(const int argc, const wchar_t* c
 		!std::filesystem::is_regular_file(pa.file_path))
 	{
 		std::cout << "Could not find any extensions to parse\n";
+		std::wcout << "Use [" << get_argument(e_argument::file_extensions) << "] to pass extensions\n";
 		parse_succeeded = false;
 	}
 
