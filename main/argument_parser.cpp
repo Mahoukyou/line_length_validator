@@ -3,6 +3,7 @@
 #include <cwchar>
 #include <limits>
 #include <iostream>
+#include <filesystem>
 
 void display_help()
 {
@@ -135,7 +136,7 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 			{
 				std::wcout << "[" << argv[argument_index] << "] - Failed to parse argument value [";
 				std::wcout << argv[argument_index + 1] << "] to unsigned int\n";
-				
+
 				++argument_index;
 				return false;
 			}
@@ -184,15 +185,15 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 				break;
 
 			case e_argument::warning_line_length:
-				if(!set_to_next_uint_argument(pa.settings.warning_line_length, i))
+				if (!set_to_next_uint_argument(pa.settings.warning_line_length, i))
 				{
 					parse_succeeded = false;
 				}
-				
+
 				break;
 
 			case e_argument::error_line_length:
-				if(!set_to_next_uint_argument(pa.settings.error_line_length, i))
+				if (!set_to_next_uint_argument(pa.settings.error_line_length, i))
 				{
 					parse_succeeded = false;
 				}
@@ -200,7 +201,7 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 				break;
 
 			case e_argument::tab_to_spaces:
-				if(!set_to_next_uint_argument(pa.settings.count_tab_as_amount_of_characters, i))
+				if (!set_to_next_uint_argument(pa.settings.count_tab_as_amount_of_characters, i))
 				{
 					parse_succeeded = false;
 				};
@@ -210,7 +211,7 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 			case e_argument::print_absolute_file_location:
 			{
 				unsigned dummy{};
-				if(!set_to_next_uint_argument(dummy, i))
+				if (!set_to_next_uint_argument(dummy, i))
 				{
 					parse_succeeded = false;
 					break;
@@ -229,41 +230,57 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 			}
 
 			case e_argument::file_extensions:
-				while(is_next_argument_an_value(i))
+			{
+				auto& extensions_vector = pa.settings.file_extensions_to_validate;
+				while (is_next_argument_an_value(i))
 				{
-					// todo,  duplicates
-					if ((argv[i + 1])[0] == '.')
+					if (wcsncmp(argv[i + 1], L".", 1) == 0)
 					{
-						pa.settings.file_extensions_to_validate.emplace_back(argv[i + 1]);
+						extensions_vector.emplace_back(argv[i + 1]);
 					}
 					else
 					{
 						std::wstring extension{ L'.' };
 						extension += argv[i + 1];
 
-						pa.settings.file_extensions_to_validate.push_back(std::move(extension));
+						extensions_vector.push_back(std::move(extension));
 					}
 
 					++i;
 				}
 
-				if(pa.settings.file_extensions_to_validate.empty())
+				// We could have just used a set, but vector is better for data locality
+				// And we will be iterating over it quite a lot
+				if (extensions_vector.size() > 1)
 				{
-					std::cout << "coulnd't find/parse extenstions\n";
+					std::sort(extensions_vector.begin(), extensions_vector.end());
+					const auto one_past_unique_it = std::unique(extensions_vector.begin(), extensions_vector.end());
+					extensions_vector.erase(one_past_unique_it, extensions_vector.end());
+					extensions_vector.shrink_to_fit();
 				}
 
-				parse_succeeded = false;
 				break;
-
+			}
 			default:
-				std::cout << " - ERROR, parse was not set for this argument\n";
+				std::wcout << "[" << argv[i] << "] - unexpected error, parse was not set for this argument";
 				parse_succeeded = false;
 			}
 		}
 		else
 		{
-			std::wcout << "argument - [" << argv[i] << "] not recognized\n";
+			std::wcout << "[" << argv[i] << "] - is not a recognized argument\n";
+			parse_succeeded = false;
 		}
+	}
+
+	// Do the check in here when we have path (hopefully)
+	// Extensions are not needed if we are checking a single file
+	if (pa.settings.file_extensions_to_validate.empty() &&
+		std::filesystem::exists(pa.file_path) &&
+		!std::filesystem::is_regular_file(pa.file_path))
+	{
+		std::cout << "Could not find any extensions to parse\n";
+		parse_succeeded = false;
 	}
 
 	// todo, return value;
