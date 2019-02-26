@@ -39,17 +39,17 @@ void print_validation_info(const llv::file_validator& file_validator)
 
 int wmain(const int argc, wchar_t** argv)
 {
-	if (has_an_argument(argc, argv, argument_help))
+	if (has_an_argument(argc, argv, e_argument::help))
 	{
 		display_help();
 		return 0;
 	}
-
-	// 3 - filename, path_argument_string, path
-	if (argc < 3)
+	
+	if (constexpr auto min_arguments_required{ 3 }; 
+		argc < min_arguments_required)
 	{
 		std::cout << "You have to pass at least a path to a file or directory.\n";
-		std::wcout << "Use " << possible_arguments[argument_path].data() << " [path] to do so.\n";
+		std::wcout << "Use " << get_argument(e_argument::path).data() << " [path] to do so.\n";
 		std::cout << "Use --help to see all available launch arguments\n";
 		return 1;
 	}

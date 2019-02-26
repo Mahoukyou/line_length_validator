@@ -6,37 +6,37 @@
 
 void display_help()
 {
-	for (auto i = 0; i < argument_max; ++i)
+	for (auto i = 0; i < static_cast<int>(e_argument::max); ++i)
 	{
 		std::wcout << possible_arguments[i].data();
-		switch (i)
+		switch (static_cast<e_argument>(i))
 		{
-		case argument_help:
+		case e_argument::help:
 			std::cout << " - displays all possible arguments\n";
 			break;
 
-		case argument_path:
+		case e_argument::path:
 			std::cout << " - path to validate, can be either path to file or a directory\n";
 			break;
 
-		case argument_warning_line_length:
+		case e_argument::warning_line_length:
 			std::cout << " - minimum amount of characters in a line to prompt a warning\n";
 			break;
 
-		case argument_error_line_length:
+		case e_argument::error_line_length:
 			std::cout << " - minimum amount of characters in a line to prompt an error\n";
 			break;
 
-		case argument_tab_to_spaces:
+		case e_argument::tab_to_spaces:
 			std::cout << " - amount of characters to convert tabs to during line length validation.";
 			std::cout << "Settings this to n means that one tab character will be counted as n character\n";
 			break;
 
-		case argument_print_absolute_file_location:
+		case e_argument::print_absolute_file_location:
 			std::cout << " - display absolute file location. Set 0 disable or 1 to enable\n";
 			break;
 
-		case argument_file_extensions:
+		case e_argument::file_extensions:
 			std::cout << " - extensions to validate separated by a space. You can prefix them with dot or not\n";
 			std::wcout << "Example usage: " << possible_arguments[i].data() << " cpp hpp .c .h\n";
 			break;
@@ -46,6 +46,12 @@ void display_help()
 		}
 	}
 }
+
+const std::wstring_view& get_argument(const e_argument argument)
+{
+	return possible_arguments[static_cast<int>(argument)];
+}
+
 
 e_argument is_an_argument(const wchar_t* const arg)
 {
@@ -57,14 +63,14 @@ e_argument is_an_argument(const wchar_t* const arg)
 		}
 	}
 
-	return argument_max;
+	return e_argument::max;
 }
 
 bool has_an_argument(const int argc, const wchar_t* const* const argv, const e_argument argument)
 {
 	for (auto i = 1; i < argc; ++i)
 	{
-		if (std::wcscmp(argv[i], possible_arguments[argument].data()) == 0)
+		if (std::wcscmp(argv[i], get_argument(argument).data()) == 0)
 		{
 			return true;
 		}
@@ -114,18 +120,18 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 	for (auto i = 1; i < argc; ++i)
 	{
 		if (const auto argument = is_an_argument(argv[i]);
-			argument != argument_max)
+			argument != e_argument::max)
 		{
 			switch (argument)
 			{
-			case argument_help:
+			case e_argument::help:
 				display_help();
 				break;
 
-			case argument_path:
+			case e_argument::path:
 				// TODO, should I leave the check if the next string is a different argument
 				// or just simply take it as the path?
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
 				{
 					pa.file_path = argv[i + 1];
 					// todo take path until we encounter another argument (because path may contain a space?)
@@ -137,8 +143,8 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 				std::cout << "err with --path arg\n"; // todo
 				break;
 
-			case argument_warning_line_length:
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+			case e_argument::warning_line_length:
+				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
 				{
 					if (const auto warning_length = parse_to_uint(argv[i + 1]);
 						warning_length.has_value())
@@ -157,8 +163,8 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 				std::cout << "warl err\n"; // todo
 				break;
 
-			case argument_error_line_length:
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+			case e_argument::error_line_length:
+				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
 				{
 					if (const auto error_length = parse_to_uint(argv[i + 1]);
 						error_length.has_value())
@@ -177,8 +183,8 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 				std::cout << "errl err\n"; // todo
 				break;
 
-			case argument_tab_to_spaces:
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+			case e_argument::tab_to_spaces:
+				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
 				{
 					if (const auto chars_per_tabulator = parse_to_uint(argv[i + 1]);
 						chars_per_tabulator.has_value())
@@ -197,8 +203,8 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 				std::cout << "tabs err\n"; // todo
 				break;
 
-			case argument_print_absolute_file_location:
-				if (i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+			case e_argument::print_absolute_file_location:
+				if (i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
 				{
 					if (const auto result = parse_to_uint(argv[i + 1]);
 						result.has_value())
@@ -224,8 +230,8 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 				std::cout << "tabs err\n"; // todo
 				break;
 
-			case argument_file_extensions:
-				while(i + 1 < argc && is_an_argument(argv[i + 1]) == argument_max)
+			case e_argument::file_extensions:
+				while(i + 1 < argc && is_an_argument(argv[i + 1]) == e_argument::max)
 				{
 					// todo,  duplicates
 					if ((argv[i + 1])[0] == '.')
