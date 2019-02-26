@@ -114,7 +114,7 @@ std::optional<unsigned> parse_to_uint(const wchar_t* const arg)
 	return { result };
 }
 
-parsed_arguments parse_arguments(const int argc, const wchar_t* const* const argv)
+std::optional<parsed_arguments> parse_arguments(const int argc, const wchar_t* const* const argv)
 {
 	const auto is_next_argument_an_value = [&](const int current_index) -> bool
 	{
@@ -283,7 +283,10 @@ parsed_arguments parse_arguments(const int argc, const wchar_t* const* const arg
 		parse_succeeded = false;
 	}
 
-	// todo, return value;
+	if(!parse_succeeded)
+	{
+		return std::nullopt;
+	}
 
 	return pa;
 }

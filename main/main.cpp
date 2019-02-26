@@ -54,8 +54,13 @@ int wmain(const int argc, wchar_t** argv)
 		return 1;
 	}
 
-	const auto arguments = parse_arguments(argc, argv);
-	llv::line_length_validator llv{ arguments.settings, arguments.file_path };
+	auto parse_result = parse_arguments(argc, argv);
+	if(!parse_result.has_value())
+	{
+		return 2;
+	}
+
+	llv::line_length_validator llv{ std::move(parse_result.value().settings), std::move(parse_result.value().file_path) };
 
 	llv.validate();
 	for (const auto& file_validator : llv.file_validators())

@@ -42,4 +42,4 @@ e_argument is_an_argument(const wchar_t* arg);
 bool has_an_argument(int argc, const wchar_t *const *argv, e_argument argument);
 
 std::optional<unsigned> parse_to_uint(const wchar_t* arg);
-parsed_arguments parse_arguments(int argc, const wchar_t *const *argv);
+std::optional<parsed_arguments> parse_arguments(int argc, const wchar_t *const *argv);
