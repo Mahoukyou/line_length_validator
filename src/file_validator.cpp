@@ -14,9 +14,10 @@ namespace llv
 
 	bool file_validator::validate(const validator_settings& settings)
 	{
-		if (!exists())
+		if (const auto result = file_state();
+			result.has_value())
 		{
-			// todo, better error msg
+			// todo, return more explicit result
 			return false;
 		}
 
@@ -25,6 +26,7 @@ namespace llv
 		std::wifstream file_stream{ file_path() };
 		if (!file_stream.good())
 		{
+			// todo return more explicit result
 			return false;
 		}
 
@@ -72,9 +74,10 @@ namespace llv
 
 	bool file_validator::update_overview(const validator_settings& settings)
 	{
-		if (!exists())
+		if (const auto result = file_state();
+			result.has_value())
 		{
-			// todo, better error msg
+			// todo, return more explicit result
 			return false;
 		}
 
@@ -84,6 +87,7 @@ namespace llv
 		std::wifstream file_stream{ file_path() };
 		if (!file_stream.good())
 		{
+			// todo, return more explicit result
 			return false;
 		}
 
@@ -117,7 +121,7 @@ namespace llv
 
 	bool file_validator::is_validation_cache_up_to_date() const
 	{
-		if (!is_validation_cached() || !exists())
+		if (!is_validation_cached() || file_state().has_value())
 		{
 			return false;
 		}
@@ -127,7 +131,7 @@ namespace llv
 
 	bool file_validator::is_overview_cache_up_to_date() const
 	{
-		if (!is_overview_cached() || !exists())
+		if (!is_overview_cached() || file_state().has_value())
 		{
 			return false;
 		}
@@ -157,6 +161,21 @@ namespace llv
 		}
 
 		return file_name.substr(file_name_begin_index + 1);
+	}
+
+	std::optional<e_file_state> file_validator::file_state() const
+	{
+		if(!exists(file_path()))
+		{
+			return e_file_state::does_not_exist;
+		}
+
+		if(!is_regular_file(file_path()))
+		{
+			return e_file_state::not_a_file;
+		}
+
+		return std::nullopt;
 	}
 
 	std::optional<e_error_type> file_validator::validate_line(const std::wstring& line, const llv::validator_settings& settings)

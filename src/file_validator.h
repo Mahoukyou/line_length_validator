@@ -17,6 +17,14 @@ namespace llv
 		error
 	};
 
+	enum class e_file_state
+	{
+		does_not_exist,
+		not_a_file,
+		cannot_open,
+		ok
+	};
+
 	struct file_line_error
 	{
 		std::wstring line;
@@ -67,12 +75,8 @@ namespace llv
 
 		std::wstring file_name() const;
 
-		bool exists() const
-		{
-			// Making sure the object exists and is still a file
-			return std::filesystem::exists(file_path()) && 
-				is_regular_file(file_path());
-		}
+		// todo, more appropriate name
+		std::optional<e_file_state> file_state() const;
 
 		const auto& results() const noexcept
 		{
@@ -98,6 +102,5 @@ namespace llv
 
 		std::filesystem::file_time_type validation_cache_last_file_modification_;
 		std::filesystem::file_time_type overview_cache_last_file_modification_;
-
 	};
 }
