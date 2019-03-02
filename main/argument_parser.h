@@ -19,7 +19,7 @@ enum class e_argument
 };
 
 /* it's just easier to use the same wide chars because we will have to do comparisons with passed arguments anyway */
-inline const std::array<std::wstring_view, static_cast<int>(e_argument::max)> possible_arguments{
+inline constexpr std::array<std::wstring_view, static_cast<int>(e_argument::max)> possible_arguments{
 	L"--help",
 	L"-path",
 	L"-wlen",

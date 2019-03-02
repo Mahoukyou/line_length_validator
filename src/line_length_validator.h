@@ -54,11 +54,15 @@ namespace llv
 			return exists(path()) && (is_regular_file(path()) || is_directory(path()));
 		}
 
-		void validate(size_t index);
-		void validate(bool update_directory_files = true);
+		std::optional<e_file_state_error> validate(size_t index);
 
-		void update_overview(size_t index);
-		void update_overview();
+		/* Returns pairs of indexes and errors for files that failed to validate */
+		std::vector<std::pair<size_t, llv::e_file_state_error>> validate(bool update_directory_files = true);
+
+		std::optional<e_file_state_error> update_overview(size_t index);
+
+		/* Returns pairs of indexes and errors for files that failed to validate */
+		std::vector<std::pair<size_t, llv::e_file_state_error>> update_overview();
 
 		void update_files_in_directory();
 

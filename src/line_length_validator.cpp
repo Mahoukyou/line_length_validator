@@ -12,21 +12,24 @@ namespace llv
 
 	}
 
-	void line_length_validator::validate(const size_t index)
+	std::optional<e_file_state_error> line_length_validator::validate(const size_t index)
 	{
 		if (file_validators().size() >= index)
 		{
-			return; // todo
+			// not really a good idea, since we are indicating all is ok
+			return std::nullopt;
 		}
 
 		if (!file_validator(index).is_validation_cache_up_to_date())
 		{
-			file_validator(index).validate(validator_settings());
+			return file_validator(index).validate(validator_settings());
 		}
+
+		return std::nullopt;;
 	}
 
 
-	void line_length_validator::validate(const bool update_directory_files)
+	std::vector<std::pair<size_t, llv::e_file_state_error>> line_length_validator::validate(const bool update_directory_files)
 	{
 		// todo to some check for dirty cache and update only when needed without the variable (the files in directory, not an actual file)
 		// same thing for overview update
@@ -35,39 +38,58 @@ namespace llv
 			update_files_in_directory();
 		}
 
-		for (auto& file_validator : file_validators_)
+		std::vector<std::pair<size_t, llv::e_file_state_error>> errors;
+		for(size_t i = 0; i < file_validators().size(); ++i)
 		{
-			if (!file_validator.is_validation_cache_up_to_date())
+			if (file_validator(i).is_validation_cache_up_to_date())
 			{
-				file_validator.validate(validator_settings());
+				continue;
+			}
+
+			if(const auto error = file_validator(i).validate(validator_settings()))
+			{
+				errors.emplace_back(i, error.value());
 			}
 		}
+
+		return errors;
 	}
 
-	void line_length_validator::update_overview(const size_t index)
+	std::optional<e_file_state_error> line_length_validator::update_overview(const size_t index)
 	{
 		if (file_validators().size() >= index)
 		{
-			return; // todo
+			// not really a good idea, since we are indicating all is ok
+			return std::nullopt;
 		}
 
 		if (!file_validator(index).is_overview_cache_up_to_date())
 		{
-			file_validator(index).update_overview(validator_settings());
+			return file_validator(index).update_overview(validator_settings());
 		}
+
+		return std::nullopt;
 	}
 
-	void line_length_validator::update_overview()
+	std::vector<std::pair<size_t, llv::e_file_state_error>> line_length_validator::update_overview()
 	{
 		// todo, update directories?
 
-		for (auto& file_validator : file_validators_)
+		std::vector<std::pair<size_t, llv::e_file_state_error>> errors;
+		for (size_t i = 0; i < file_validators().size(); ++i)
 		{
-			if (!file_validator.is_overview_cache_up_to_date())
+			if (file_validator(i).is_overview_cache_up_to_date())
 			{
-				file_validator.update_overview(validator_settings());
+				continue;
+			}
+
+			if(const auto error = file_validator(i).update_overview(validator_settings()))
+			{
+				errors.emplace_back(i, error.value());
 			}
 		}
+
+		return errors;
 	}
 
 	void line_length_validator::update_files_in_directory()
