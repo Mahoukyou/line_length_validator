@@ -17,12 +17,11 @@ namespace llv
 		error
 	};
 
-	enum class e_file_state
+	enum class e_file_state_error
 	{
 		does_not_exist,
 		not_a_file,
-		cannot_open,
-		ok
+		cannot_open
 	};
 
 	struct file_line_error
@@ -52,8 +51,8 @@ namespace llv
 		file_validator& operator=(const file_validator&) = default;
 		file_validator& operator=(file_validator&&) noexcept = default;
 
-		bool validate(const validator_settings& settings);
-		bool update_overview(const validator_settings& settings);
+		std::optional<e_file_state_error> validate(const validator_settings& settings);
+		std::optional<e_file_state_error> update_overview(const validator_settings& settings);
 
 		bool is_validation_cached() const noexcept
 		{
@@ -75,8 +74,7 @@ namespace llv
 
 		std::wstring file_name() const;
 
-		// todo, more appropriate name
-		std::optional<e_file_state> file_state() const;
+		std::optional<e_file_state_error> file_state() const;
 
 		const auto& results() const noexcept
 		{

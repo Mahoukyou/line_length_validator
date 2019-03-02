@@ -12,13 +12,12 @@ namespace llv
 
 	}
 
-	bool file_validator::validate(const validator_settings& settings)
+	std::optional<e_file_state_error> file_validator::validate(const validator_settings& settings)
 	{
-		if (const auto result = file_state();
-			result.has_value())
+		if (const auto file_state_error = file_state();
+			file_state_error.has_value())
 		{
-			// todo, return more explicit result
-			return false;
+			return file_state_error;
 		}
 
 		const auto last_file_modification = last_write_time(file_path());
@@ -26,8 +25,7 @@ namespace llv
 		std::wifstream file_stream{ file_path() };
 		if (!file_stream.good())
 		{
-			// todo return more explicit result
-			return false;
+			return e_file_state_error::cannot_open;
 		}
 
 		file_overview new_overview{};
@@ -69,16 +67,15 @@ namespace llv
 		validation_cache_last_file_modification_ = last_file_modification;
 		overview_cache_last_file_modification_ = last_file_modification;
 
-		return true;
+		return std::nullopt;
 	}
 
-	bool file_validator::update_overview(const validator_settings& settings)
+	std::optional<e_file_state_error> file_validator::update_overview(const validator_settings& settings)
 	{
-		if (const auto result = file_state();
-			result.has_value())
+		if (const auto file_state_error = file_state();
+			file_state_error.has_value())
 		{
-			// todo, return more explicit result
-			return false;
+			return file_state_error;
 		}
 
 		const auto last_file_modification = last_write_time(file_path());
@@ -87,8 +84,7 @@ namespace llv
 		std::wifstream file_stream{ file_path() };
 		if (!file_stream.good())
 		{
-			// todo, return more explicit result
-			return false;
+			return e_file_state_error::cannot_open;
 		}
 
 		for (std::wstring line; std::getline(file_stream, line);)
@@ -116,7 +112,7 @@ namespace llv
 		is_overview_cached_ = true;
 		overview_cache_last_file_modification_ = last_file_modification;
 
-		return true;
+		return std::nullopt;
 	}
 
 	bool file_validator::is_validation_cache_up_to_date() const
@@ -163,16 +159,16 @@ namespace llv
 		return file_name.substr(file_name_begin_index + 1);
 	}
 
-	std::optional<e_file_state> file_validator::file_state() const
+	std::optional<e_file_state_error> file_validator::file_state() const
 	{
 		if(!exists(file_path()))
 		{
-			return e_file_state::does_not_exist;
+			return e_file_state_error::does_not_exist;
 		}
 
 		if(!is_regular_file(file_path()))
 		{
-			return e_file_state::not_a_file;
+			return e_file_state_error::not_a_file;
 		}
 
 		return std::nullopt;
